@@ -1,0 +1,103 @@
+/* src/styles/Attendance.css */
+
+.attendance-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center; /* Center horizontally */
+    padding: 20px; /* Add some padding around the content */
+  }
+  
+  .attendance-header {
+    margin-bottom: 10px; /* Reduced space below the header */
+  }
+  
+  .attendance-content {
+    text-align: center; /* Center text inside content */
+  }
+  
+  .table-container {
+    display: flex;
+    justify-content: center; /* Center the table */
+    width: 100%; /* Make it take full width */
+    overflow-x: auto;
+    margin: 20px 0;
+  }
+  
+  table {
+    border-collapse: collapse; /* Collapse borders for cleaner look */
+    width: 100%;
+    background-color: white;
+  }
+  
+  th, td {
+    border: 1px solid #ddd; /* Add borders to table cells */
+    padding: 12px; /* Space inside cells */
+    text-align: left; /* Align text to the left */
+    border-bottom: 1px solid #ddd;
+  }
+  
+  th {
+    background-color: #f4f4f4; /* Background color for headers */
+    font-weight: bold;
+  }
+  
+  tr:hover {
+    background-color: #f5f5f5;
+  }
+  
+  /* Burger menu styles */
+.burger-menu {
+    display: flex;
+    flex-direction: column;
+    cursor: pointer;
+    gap: 4px;
+    margin-left: auto;
+  }
+  
+  .burger-line {
+    width: 25px;
+    height: 3px;
+    background-color: black;
+    transition: transform 0.3s ease;
+  }
+  
+  /* Sidebar menu styles */
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: -250px; /* Initially hidden off-screen */
+    width: 250px;
+    height: 100%;
+    background-color: #333;
+    color: #fff;
+    display: flex;
+    flex-direction: column;
+    padding: 20px;
+    transition: left 0.3s ease;
+  }
+  
+  .sidebar.open {
+    left: 0; /* Slide in when open */
+  }
+  
+  .sidebar nav a {
+    color: white;
+    padding: 10px 0;
+    text-decoration: none;
+    transition: color 0.3s;
+  }
+  
+  .sidebar nav a:hover {
+    color: #ccc;
+  }
+  
+  /* Add some space to the right of the main content to make room for the sidebar */
+  .attendance-container {
+    padding-left: 20px;
+    transition: padding-left 0.3s;
+  }
+  
+  .sidebar.open ~ .attendance-container {
+    padding-left: 270px; /* Shift content when sidebar is open */
+  }
+  

@@ -1,0 +1,17 @@
+.calendar-page-container {
+    display: flex;                /* Use flexbox layout */
+    flex-direction: column;       /* Stack children vertically */
+    align-items: center;          /* Center horizontally */
+    justify-content: center;      /* Center vertically */
+    height: 100vh;               /* Fill the viewport height */
+    padding: 20px;               /* Optional: Add some padding */
+  }
+  
+  .calendar-header {
+    margin-bottom: 20px;         /* Space between header and calendar */
+  }
+  
+  .attendance-link-container {
+    margin-top: 20px;            /* Space above the attendance link */
+  }
+  

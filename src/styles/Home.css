@@ -1,0 +1,255 @@
+Home container styles
+.home-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    font-family: Arial, sans-serif;
+    
+    
+}
+
+/* Header styles */
+.home-header {
+    width: 100%;
+    padding: 10px;
+    background-color: #333;
+    color: white;
+    display: flex;
+    align-items: center;
+    
+    
+}
+
+.menu-icon {
+    font-size: 24px;
+    cursor: pointer;
+    margin-right: 10px;
+    
+}
+
+.home-header h1 {
+    margin: 0;
+    font-size: 20px;
+    
+}
+
+/* Main content styles */
+.home-content {
+    text-align: center;
+    margin-top: 20px;
+
+    
+}
+
+.home-content h2 {
+    font-size: 18px;
+    font-weight: bold;
+    margin-bottom: 20px;
+    
+    
+}
+
+/* Button container styles */
+.button-container {
+    display: flex;
+    flex-direction: column; /* Align buttons vertically */
+    gap: 20px; /* Space between buttons */
+    align-items: center; /* Center buttons horizontally */
+    margin-top: 20px; /* Add some margin to the top */
+    
+}
+
+/* Button styles */
+.class-button {
+  padding: 15px 30px; /* Adjust padding here */
+  font-size: 18px; /* Consistent font size */
+  border: none;
+  border-radius: 8px;
+  background-color: #3b3d3f; /* Button color */
+  color: white;
+  cursor: pointer;
+  transition: background-color 0.3s;
+  text-align: center; /* Center the text */
+  
+}
+
+.class-button:hover {
+  background-color:   #eb1088;
+  
+}
+
+/* Popup overlay styles */
+.popup-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+/* Smaller button style for ICT12 */
+.class-button-small {
+  padding: 10px 20px; /* Smaller padding */
+  font-size: 16px; /* Smaller font size */
+}
+
+/* Popup menu styles */
+.popup-menu {
+  background: white;
+  padding: 20px;
+  padding-bottom: 50px; /* Add extra padding at the bottom */
+  border-radius: 8px;
+  width: 200px;
+  text-align: center;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+  position: relative;
+}
+
+.popup-menu ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.popup-menu li {
+    padding: 10px 0;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+.popup-menu li:hover {
+    background-color: #f0f0f0;
+}
+
+/* Close button styles */
+.close-btn {
+  position: absolute;
+  bottom: 10px; /* Distance from the bottom of the popup menu */
+  left: 50%;
+  transform: translateX(-50%);
+  background: none;
+  border: none;
+  font-size: 16px;
+  cursor: pointer;
+  color: #ffffff;
+}
+
+
+/* Month button styles */
+.month-container {
+    display: grid; /* Use CSS Grid for layout */
+    grid-template-columns: repeat(2, 1fr); /* Two equal columns */
+    gap: 10px; /* Space between buttons */
+    margin-top: 20px;
+  }
+  
+  .month-button {
+    padding: 10px 20px;
+    font-size: 16px;
+    border: none;
+    border-radius: 5px;
+    background-color: #007bff;
+    color: white;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    text-align: center; /* Center the text */
+  }
+  
+  .month-button:hover {
+    background-color: #0056b3;
+  }
+
+
+/* Parent container styles (optional) */
+.parent-container {
+    display: flex;
+    justify-content: center; /* Center the month-container */
+    align-items: center; /* Center vertically if needed */
+    height: 100vh; /* Fill the viewport height */
+  }
+  
+  /* Month container styles */
+  .month-container {
+    display: grid; /* Use CSS Grid for layout */
+    grid-template-columns: repeat(2, 1fr); /* Two equal columns */
+    gap: 20px; /* Space between buttons */
+    width: 100%; /* Make the grid take full width */
+    max-width: 600px; /* Optional: limit the maximum width of the grid */
+    margin: 0 auto; /* Center the grid itself within the parent */
+  }
+  
+  /* Month button styles */
+  .month-button {
+    width: 200px; /* Keep the explicit width */
+    height: 60px; /* Keep the explicit height */
+    font-size: 20px; /* Font size */
+    font-weight: bold; /* Font weight */
+    border: none;
+    border-radius: 5px;
+    background-color: #3b3d3f; /* Button color */
+    color: white; /* Text color */
+    cursor: pointer; /* Change cursor on hover */
+    transition: background-color 0.3s; /* Smooth background color transition */
+    text-align: center; /* Center the text */
+  }
+  
+  .month-button:hover {
+    background-color: #eb1088; /* Darker background on hover */
+  }
+  
+  .logo-container {
+    display: flex;
+    justify-content: center;
+    margin-top: 20px;
+}
+
+.logo {
+    width: 200px;
+    height: 200px;
+    margin: 0 400px;
+    object-fit: contain; /* Ensures the image maintains its aspect ratio within the 200x200 box */
+}
+
+/* Updated side menu styles */
+.side-menu {
+  position: fixed;
+  top: 0;
+  left: -250px; /* Start off-screen */
+  width: 250px;
+  height: 100%;
+  background-color: #333333c8; /* Slightly transparent background */
+  transition: left 0.3s ease; /* Smooth transition */
+  z-index: 1000; /* Ensure it appears above other content */
+  box-shadow: 2px 0 5px rgba(0, 0, 0, 0.2);
+  /* Optional shadow for depth */
+}
+
+.side-menu.active {
+  left: 0; /* Slide in */
+  
+}
+
+/* Menu item styles */
+.side-menu ul {
+  list-style: none;
+  padding: 20px; /* Add padding for spacing */
+  margin: 0;
+  
+
+}
+
+.side-menu li {
+  padding: 15px 0; /* Space between items */
+  font-size: 17px; /* Font size for menu items */
+  cursor: pointer; /* Change cursor on hover */
+  color: #b0b0b0;
+}
+
+.side-menu li:hover {
+  background-color: #f0f0f0; /* Highlight on hover */
+}
