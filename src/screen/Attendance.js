@@ -14,6 +14,11 @@ const Attendance = () => {
 
   useEffect(() => {
     fetchAttendanceRecords(selectedDate);
+    const interval = setInterval(() => {
+      fetchAttendanceRecords(selectedDate);
+    }, 2000); // Refresh every 30 seconds
+
+    return () => clearInterval(interval); // Cleanup on unmount
   }, [selectedDate]);
 
   const fetchAttendanceRecords = async (date) => {
