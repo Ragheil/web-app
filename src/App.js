@@ -22,7 +22,7 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import SignIn from './screen/SignIn';
-import Home from './screen/Home'; // Adjust path if necessary
+// import Home from './screen/Home'; // Adjust path if necessary
 import Record from './screen/Record'; // Adjust path if necessary
 import Section from './screen/Section'; // Import the Section component
 import Calendar from './screen/Calendar'; // Adjust path if necessary
@@ -34,7 +34,7 @@ const App = () => {
   return (
     <Router>
       <Routes>
-        <Route path="/home" element={<Home />} />
+        {/* <Route path="/home" element={<Home />} /> */}
         <Route path="/" element={<SignIn />} />
         <Route path="/record" element={<Record />} />
         <Route path="/section" element={<Section />} />

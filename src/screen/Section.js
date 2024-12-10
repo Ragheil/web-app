@@ -40,12 +40,12 @@ const Section = () => {
         <div className={`side-menu ${showMenu ? 'active' : ''}`}>
         <button className="close-btn" onClick={toggleMenu}>Close</button>
         <ul>
-        <li><Link to="/home" onClick={toggleMenu}>Home</Link></li>
+        {/* <li><Link to="/home" onClick={toggleMenu}>Home</Link></li> */}
         
-          <li><Link to="/Attendance" onClick={toggleMenu}>Attendance</Link></li>
-          <li><Link to="/Student" onClick={toggleMenu}>Student</Link></li>
-          <li><Link to="/Profile" onClick={toggleMenu}>Profile</Link></li>
-        </ul>
+        <li><Link to="/Attendance" onClick={toggleMenu} style={{color: 'white'}}>Attendance</Link></li>
+        <li><Link to="/Student" onClick={toggleMenu} style={{color: 'white'}}>Student</Link></li>
+        <li><Link to="/Profile" onClick={toggleMenu} style={{color: 'white'}}>Profile</Link></li>
+            </ul>
           </div>
         
       )}

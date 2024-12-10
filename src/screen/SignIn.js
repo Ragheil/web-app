@@ -27,7 +27,7 @@ const SignIn = () => {
         setError(error.message);
       } else {
         // Redirect to home page on successful login
-        navigate('/home');
+        navigate('/record');
       }
     } catch (err) {
       setError("An unexpected error occurred");

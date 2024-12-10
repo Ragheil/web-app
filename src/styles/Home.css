@@ -192,7 +192,7 @@ Home container styles
     border: none;
     border-radius: 5px;
     background-color: #3b3d3f; /* Button color */
-    color: white; /* Text color */
+    color: white; 
     cursor: pointer; /* Change cursor on hover */
     transition: background-color 0.3s; /* Smooth background color transition */
     text-align: center; /* Center the text */
@@ -247,9 +247,10 @@ Home container styles
   padding: 15px 0; /* Space between items */
   font-size: 17px; /* Font size for menu items */
   cursor: pointer; /* Change cursor on hover */
-  color: #b0b0b0;
+  /* color: white;  */
 }
 
 .side-menu li:hover {
-  background-color: #f0f0f0; /* Highlight on hover */
+  background-color: #333; /* Change hover background color to black */
+  color: white; /* Ensure text color remains white on hover */
 }
