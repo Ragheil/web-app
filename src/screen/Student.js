@@ -5,11 +5,13 @@ import '../styles/Student.css';
 const Student = () => {
   const [logs, setLogs] = useState([]);
   const [attendanceRecords, setAttendanceRecords] = useState([]);
+  const [teachers, setTeachers] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     fetchLogs();
     fetchAttendanceRecords();
+    fetchTeachers();
   }, []);
 
   const fetchLogs = async () => {
@@ -45,6 +47,26 @@ const Student = () => {
     }
   };
 
+  const fetchTeachers = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('teachers')
+        .select('*');
+
+      if (error) throw error;
+
+      console.log('Fetched teachers:', data);
+      setTeachers(data);
+    } catch (error) {
+      console.error('Error fetching teachers:', error.message);
+    }
+  };
+
+  const getTeacherName = (teacherId) => {
+    const teacher = teachers.find(t => t.teacher_id === teacherId);
+    return teacher ? teacher.teacher : 'Unknown Teacher';
+  };
+
   return (
     <div className="logs-container">
       <h1>Activity Logs</h1>
@@ -72,7 +94,7 @@ const Student = () => {
               return (
                 <tr key={log.log_id}>
                   <td>{log.activity}</td>
-                  <td>{log.teacher}</td>
+                  <td>{getTeacherName(log.teacher)}</td>
                   <td>{studentName}</td>
                   <td>{log.reason}</td>
                   <td>{log.comment}</td>

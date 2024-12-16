@@ -2,12 +2,21 @@ import React, { useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { supabase } from '../lib/supabaseClient';
 import '../styles/Attendance.css';
+import Modal from 'react-modal';
 
 const Attendance = () => {
   const [attendanceRecords, setAttendanceRecords] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [modalIsOpen, setModalIsOpen] = useState(false);
+  const [selectedRecord, setSelectedRecord] = useState(null);
+  const [selectedTeacher, setSelectedTeacher] = useState(null);
   const location = useLocation();
   
+  // Set the app element for accessibility
+  useEffect(() => {
+    Modal.setAppElement('#root'); // Replace '#root' with your app's main element ID
+  }, []);
+
   // Get the date from the URL query parameters
   const queryParams = new URLSearchParams(location.search);
   const selectedDate = queryParams.get('date') || new Date().toISOString().split('T')[0]; // Default to today
@@ -47,6 +56,51 @@ const Attendance = () => {
     }
   };
 
+  const handleEdit = (record) => {
+    setSelectedRecord(record);
+    setModalIsOpen(true);
+  };
+
+  const closeModal = () => {
+    setModalIsOpen(false);
+    setSelectedRecord(null);
+  };
+
+  // Define the handleUpdate function
+  const handleUpdate = async () => {
+    try {
+      const currentDateTime = new Date();
+      const formattedDateTime = currentDateTime.toISOString().slice(0, 19).replace('T', ' '); // Format to "YYYY-MM-DD HH:MM:SS"
+
+      // Check if teacher is defined
+      if (!selectedTeacher) {
+        console.error('Teacher value is required.');
+        return; // Exit if teacher is not set
+      }
+
+      const { error } = await supabase
+        .from('logs')
+        .insert({
+          activity: selectedRecord.activity,
+          teacher: parseInt(selectedTeacher, 10), // Ensure this is an integer
+          student: selectedRecord.student_lrn,
+          reason: selectedRecord.reason,
+          comment: selectedRecord.comment,
+          datetime: formattedDateTime, // Use the formatted date
+        });
+
+      if (error) {
+        console.error('Error inserting log record:', error.message);
+        return;
+      }
+
+      fetchAttendanceRecords(selectedDate);
+      closeModal();
+    } catch (err) {
+      console.error('Unexpected error:', err);
+    }
+  };
+
   if (loading) {
     return <p>Loading...</p>;
   }
@@ -68,6 +122,7 @@ const Attendance = () => {
                   <th>Date</th>
                   <th>Status</th>
                   <th>Evaluation</th>
+                  <th>Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -79,6 +134,10 @@ const Attendance = () => {
                     <td>{new Date(record.date).toLocaleString()}</td>
                     <td>{record.status}</td>
                     <td>{record.evaluation}</td>
+                    <td>
+                      <button onClick={() => handleEdit(record)}
+                       style={{ color: 'white', backgroundColor: '#333' }}>Edit</button>
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -86,6 +145,80 @@ const Attendance = () => {
           </div>
         )}
       </div>
+
+      <Modal isOpen={modalIsOpen} onRequestClose={closeModal} contentLabel="Edit Record">
+        <h2>Edit Record</h2>
+        {selectedRecord && (
+          <form>
+            <table>
+              <thead>
+                <tr>
+                  <th>Activity</th>
+                  <th>Teacher</th>
+                  <th>Student</th>
+                  <th>Reason</th>
+                  <th>Comment</th>
+                  <th>Date/Time</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>
+                    <input
+                      type="text"
+                      value={selectedRecord.activity || ''}
+                      onChange={(e) => setSelectedRecord({ ...selectedRecord, activity: e.target.value })}
+                      style={{ color: 'black', backgroundColor: 'white' }}
+                    />
+                  </td>
+                  <td>
+                    <input
+                      type="text"
+                      value={selectedTeacher || ''}
+                      onChange={(e) => setSelectedTeacher(e.target.value)}
+                      style={{ color: 'black', backgroundColor: 'white' }}
+                    />
+                  </td>
+                  <td>
+                    {`${selectedRecord.students.first_name || ''} ${selectedRecord.students.middle_name || ''} ${selectedRecord.students.last_name || ''}`}
+                  </td>
+                  <td>
+                    <input
+                      type="text"
+                      value={selectedRecord.reason || ''}
+                      onChange={(e) => setSelectedRecord({ ...selectedRecord, reason: e.target.value })}
+                      style={{ color: 'black', backgroundColor: 'white' }}
+                    />
+                  </td>
+                  <td>
+                    <input
+                      type="text"
+                      value={selectedRecord.comment || ''}
+                      onChange={(e) => setSelectedRecord({ ...selectedRecord, comment: e.target.value })}
+                      style={{ color: 'black', backgroundColor: 'white' }}
+                    />
+                  </td>
+                  <td>{new Date(selectedRecord.date).toLocaleString()}</td>
+                </tr>
+              </tbody>
+            </table>
+            <button 
+              type="button" 
+              onClick={closeModal} 
+              style={{ color: 'white', backgroundColor: '#333', width: '100px' }}
+            >
+              Close
+            </button>
+            <button 
+              type="button" 
+              onClick={handleUpdate} 
+              style={{ color: 'white', backgroundColor: '#333', width: '100px' }}
+            >
+              Confirm
+            </button>
+          </form>
+        )}
+      </Modal>
     </div>
   );
 };
