@@ -2,19 +2,17 @@ import React, { useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { supabase } from '../lib/supabaseClient';
 import '../styles/Attendance.css';
-import Modal from 'react-modal';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faCheck, faTimes } from '@fortawesome/free-solid-svg-icons';
 
 const Attendance = () => {
   const [attendanceRecords, setAttendanceRecords] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [modalIsOpen, setModalIsOpen] = useState(false);
-  const [selectedRecord, setSelectedRecord] = useState(null);
-  const [selectedTeacher, setSelectedTeacher] = useState(null);
+  const [attendance, setAttendance] = useState({});
   const location = useLocation();
   
   // Set the app element for accessibility
   useEffect(() => {
-    Modal.setAppElement('#root'); // Replace '#root' with your app's main element ID
   }, []);
 
   // Get the date from the URL query parameters
@@ -37,7 +35,7 @@ const Attendance = () => {
       const endOfDay = new Date(date);
       endOfDay.setUTCHours(23, 59, 59, 999); // Set to UTC
 
-      const { data, error } = await supabase
+      const { data: records, error } = await supabase
         .from('attendance')
         .select(`student_lrn, date, status, evaluation, students (first_name, middle_name, last_name)`)
         .gte('date', startOfDay.toISOString())
@@ -48,7 +46,36 @@ const Attendance = () => {
         return;
       }
 
-      setAttendanceRecords(data);
+      setAttendanceRecords(records);
+
+      // Fetch existing attendance status for the day
+      const { data: attendanceData, error: attendanceError } = await supabase
+        .from('attendance')
+        .select('student_lrn, subject, is_present')
+        .eq('date', date);
+
+      if (attendanceError) {
+        console.error('Error fetching attendance status:', attendanceError);
+        return;
+      }
+
+      // Create an object to store attendance status
+      const attendanceStatus = {};
+      // First set all combinations to true (✓)
+      records.forEach(record => {
+        ['TVL', 'PE', 'HISTORY', 'MATH', 'AP', 'SCIENCE'].forEach(subject => {
+          attendanceStatus[`${record.student_lrn}-${subject}`] = true;
+        });
+      });
+      
+      // Then override with any existing false (X) values from the database
+      attendanceData?.forEach(record => {
+        if (record.is_present === false) { // Only override if explicitly marked as false
+          attendanceStatus[`${record.student_lrn}-${record.subject}`] = false;
+        }
+      });
+
+      setAttendance(attendanceStatus);
     } catch (err) {
       console.error('Unexpected error:', err);
     } finally {
@@ -56,59 +83,87 @@ const Attendance = () => {
     }
   };
 
-  const handleEdit = (record) => {
-    setSelectedRecord(record);
-    setModalIsOpen(true);
-  };
-
-  const closeModal = () => {
-    setModalIsOpen(false);
-    setSelectedRecord(null);
-  };
-
-  // Define the handleUpdate function
-  const handleUpdate = async () => {
+  const handleIconClick = async (studentLrn, subject) => {
     try {
-      const currentDateTime = new Date();
-      const formattedDateTime = currentDateTime.toISOString().slice(0, 19).replace('T', ' '); // Format to "YYYY-MM-DD HH:MM:SS"
+      // Get current value, default to true if not set
+      const currentValue = attendance[`${studentLrn}-${subject}`] ?? true;
+      const newValue = !currentValue;
+      
+      setAttendance(prev => ({
+        ...prev,
+        [`${studentLrn}-${subject}`]: newValue
+      }));
 
-      // Check if teacher is defined
-      if (!selectedTeacher) {
-        console.error('Teacher value is required.');
-        return; // Exit if teacher is not set
+      // Only save to database if marking as absent (X)
+      if (!newValue) {
+        const { error } = await supabase
+          .from('attendance')
+          .upsert({
+            student_lrn: studentLrn,
+            subject: subject,
+            is_present: false,
+            date: selectedDate
+          });
+
+        if (error) {
+          console.error('Error updating attendance:', error);
+          // Revert the state if there's an error
+          setAttendance(prev => ({
+            ...prev,
+            [`${studentLrn}-${subject}`]: currentValue
+          }));
+        }
+      } else {
+        // If marking as present (✓), remove the record if it exists
+        const { error } = await supabase
+          .from('attendance')
+          .delete()
+          .match({ 
+            student_lrn: studentLrn, 
+            subject: subject,
+            date: selectedDate 
+          });
+
+        if (error) {
+          console.error('Error removing attendance record:', error);
+          setAttendance(prev => ({
+            ...prev,
+            [`${studentLrn}-${subject}`]: currentValue
+          }));
+        }
       }
-
-      const { error } = await supabase
-        .from('logs')
-        .insert({
-          activity: selectedRecord.activity,
-          teacher: parseInt(selectedTeacher, 10), // Ensure this is an integer
-          student: selectedRecord.student_lrn,
-          reason: selectedRecord.reason,
-          comment: selectedRecord.comment,
-          datetime: formattedDateTime, // Use the formatted date
-        });
-
-      if (error) {
-        console.error('Error inserting log record:', error.message);
-        return;
-      }
-
-      fetchAttendanceRecords(selectedDate);
-      closeModal();
     } catch (err) {
       console.error('Unexpected error:', err);
     }
+  };
+
+  const renderSubjectCell = (studentLrn, subject) => {
+    // Default to true (✓ icon) if no attendance record exists
+    const isPresent = attendance[`${studentLrn}-${subject}`] ?? true;
+    return (
+      <td 
+        className="check-cell" 
+        onClick={() => handleIconClick(studentLrn, subject)}
+        style={{ cursor: 'pointer' }}
+      >
+        <FontAwesomeIcon 
+          icon={isPresent ? faCheck : faTimes} 
+          className={`status-icon ${isPresent ? 'present' : 'absent'}`}
+        />
+      </td>
+    );
   };
 
   if (loading) {
     return <p>Loading...</p>;
   }
 
+  const subjects = ['TVL', 'PE', 'HISTORY', 'MATH', 'AP', 'SCIENCE'];
+
   return (
     <div className="attendance-container">
       <header className="attendance-header">
-        <h1>Attendance Logs </h1>
+        <h1>Attendance Logs</h1>
       </header>
       <div className="attendance-content">
         {attendanceRecords.length === 0 ? (
@@ -118,26 +173,19 @@ const Attendance = () => {
             <table>
               <thead>
                 <tr>
-                  <th>Student Name</th>
-                  <th>Date</th>
-                  <th>Status</th>
-                  <th>Evaluation</th>
-                  <th>Actions</th>
+                  <th>STUDENT NAME</th>
+                  {subjects.map(subject => (
+                    <th key={subject}>{subject}</th>
+                  ))}
                 </tr>
               </thead>
               <tbody>
-                {attendanceRecords.map((record, index) => (
-                  <tr key={index}>
+                {attendanceRecords.map((record) => (
+                  <tr key={record.student_lrn}>
                     <td>
                       {`${record.students.first_name} ${record.students.middle_name || ''} ${record.students.last_name}`}
                     </td>
-                    <td>{new Date(record.date).toLocaleString()}</td>
-                    <td>{record.status}</td>
-                    <td>{record.evaluation}</td>
-                    <td>
-                      <button onClick={() => handleEdit(record)}
-                       style={{ color: 'white', backgroundColor: '#333' }}>Edit</button>
-                    </td>
+                    {subjects.map(subject => renderSubjectCell(record.student_lrn, subject))}
                   </tr>
                 ))}
               </tbody>
@@ -145,80 +193,6 @@ const Attendance = () => {
           </div>
         )}
       </div>
-
-      <Modal isOpen={modalIsOpen} onRequestClose={closeModal} contentLabel="Edit Record">
-        <h2>Edit Record</h2>
-        {selectedRecord && (
-          <form>
-            <table>
-              <thead>
-                <tr>
-                  <th>Activity</th>
-                  <th>Teacher</th>
-                  <th>Student</th>
-                  <th>Reason</th>
-                  <th>Comment</th>
-                  <th>Date/Time</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td>
-                    <input
-                      type="text"
-                      value={selectedRecord.activity || ''}
-                      onChange={(e) => setSelectedRecord({ ...selectedRecord, activity: e.target.value })}
-                      style={{ color: 'black', backgroundColor: 'white' }}
-                    />
-                  </td>
-                  <td>
-                    <input
-                      type="text"
-                      value={selectedTeacher || ''}
-                      onChange={(e) => setSelectedTeacher(e.target.value)}
-                      style={{ color: 'black', backgroundColor: 'white' }}
-                    />
-                  </td>
-                  <td>
-                    {`${selectedRecord.students.first_name || ''} ${selectedRecord.students.middle_name || ''} ${selectedRecord.students.last_name || ''}`}
-                  </td>
-                  <td>
-                    <input
-                      type="text"
-                      value={selectedRecord.reason || ''}
-                      onChange={(e) => setSelectedRecord({ ...selectedRecord, reason: e.target.value })}
-                      style={{ color: 'black', backgroundColor: 'white' }}
-                    />
-                  </td>
-                  <td>
-                    <input
-                      type="text"
-                      value={selectedRecord.comment || ''}
-                      onChange={(e) => setSelectedRecord({ ...selectedRecord, comment: e.target.value })}
-                      style={{ color: 'black', backgroundColor: 'white' }}
-                    />
-                  </td>
-                  <td>{new Date(selectedRecord.date).toLocaleString()}</td>
-                </tr>
-              </tbody>
-            </table>
-            <button 
-              type="button" 
-              onClick={closeModal} 
-              style={{ color: 'white', backgroundColor: '#333', width: '100px' }}
-            >
-              Close
-            </button>
-            <button 
-              type="button" 
-              onClick={handleUpdate} 
-              style={{ color: 'white', backgroundColor: '#333', width: '100px' }}
-            >
-              Confirm
-            </button>
-          </form>
-        )}
-      </Modal>
     </div>
   );
 };

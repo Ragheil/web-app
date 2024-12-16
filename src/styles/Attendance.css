@@ -24,21 +24,57 @@
   }
   
   table {
-    border-collapse: collapse; /* Collapse borders for cleaner look */
+    border-collapse: collapse;
     width: 100%;
     background-color: white;
   }
   
   th, td {
-    border: 1px solid #ddd; /* Add borders to table cells */
-    padding: 12px; /* Space inside cells */
-    text-align: left; /* Align text to the left */
-    border-bottom: 1px solid #ddd;
+    border: 1px solid #000;
+    padding: 8px;
+    text-align: left;
+    font-size: 14px;
   }
   
   th {
-    background-color: #f4f4f4; /* Background color for headers */
-    font-weight: bold;
+    background-color: white;
+    font-weight: normal;
+    text-align: center;
+  }
+  
+  td {
+    min-width: 80px;
+  }
+
+  .check-cell {
+    text-align: center;
+    transition: background-color 0.2s;
+  }
+
+  .check-cell:hover {
+    background-color: #f0f0f0;
+  }
+
+  .status-icon {
+    font-size: 14px;
+    transition: transform 0.2s;
+  }
+
+  .status-icon.present {
+    color: #28a745;
+  }
+
+  .status-icon.absent {
+    color: #dc3545;
+  }
+
+  .status-icon:hover {
+    transform: scale(1.2);
+  }
+
+  .check-icon {
+    color: #000;
+    font-size: 14px;
   }
   
   tr:hover {
@@ -46,7 +82,7 @@
   }
   
   /* Burger menu styles */
-.burger-menu {
+  .burger-menu {
     display: flex;
     flex-direction: column;
     cursor: pointer;
@@ -100,4 +136,3 @@
   .sidebar.open ~ .attendance-container {
     padding-left: 270px; /* Shift content when sidebar is open */
   }
-  
