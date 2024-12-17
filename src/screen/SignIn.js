@@ -61,7 +61,7 @@ const SignIn = () => {
             required
           />
         </div>
-        <button type="submit"  disabled={loading}>
+        <button type="submit" disabled={loading} style={{ color: 'white' }}>
           {loading ? 'Signing In...' : 'Login'}
         </button>
         {error && <p className="error-message">{error}</p>}

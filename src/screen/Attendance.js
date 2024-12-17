@@ -36,8 +36,19 @@ const Attendance = () => {
       endOfDay.setUTCHours(23, 59, 59, 999); // Set to UTC
 
       const { data: records, error } = await supabase
-        .from('attendance')
-        .select(`student_lrn, date, status, evaluation, students (first_name, middle_name, last_name)`)
+        .from('monitoring_log')
+        .select(`
+          log_id,
+          student_lrn,
+          date,
+          status,
+          evaluation,
+          students (
+            first_name,
+            middle_name,
+            last_name
+          )
+        `)
         .gte('date', startOfDay.toISOString())
         .lte('date', endOfDay.toISOString());
 
@@ -48,31 +59,13 @@ const Attendance = () => {
 
       setAttendanceRecords(records);
 
-      // Fetch existing attendance status for the day
-      const { data: attendanceData, error: attendanceError } = await supabase
-        .from('attendance')
-        .select('student_lrn, subject, is_present')
-        .eq('date', date);
-
-      if (attendanceError) {
-        console.error('Error fetching attendance status:', attendanceError);
-        return;
-      }
-
       // Create an object to store attendance status
       const attendanceStatus = {};
       // First set all combinations to true (✓)
       records.forEach(record => {
         ['TVL', 'PE', 'HISTORY', 'MATH', 'AP', 'SCIENCE'].forEach(subject => {
-          attendanceStatus[`${record.student_lrn}-${subject}`] = true;
+          attendanceStatus[`${record.student_lrn}-${subject}`] = record.status === 'present';
         });
-      });
-      
-      // Then override with any existing false (X) values from the database
-      attendanceData?.forEach(record => {
-        if (record.is_present === false) { // Only override if explicitly marked as false
-          attendanceStatus[`${record.student_lrn}-${record.subject}`] = false;
-        }
       });
 
       setAttendance(attendanceStatus);
@@ -85,7 +78,6 @@ const Attendance = () => {
 
   const handleIconClick = async (studentLrn, subject) => {
     try {
-      // Get current value, default to true if not set
       const currentValue = attendance[`${studentLrn}-${subject}`] ?? true;
       const newValue = !currentValue;
       
@@ -94,43 +86,22 @@ const Attendance = () => {
         [`${studentLrn}-${subject}`]: newValue
       }));
 
-      // Only save to database if marking as absent (X)
-      if (!newValue) {
-        const { error } = await supabase
-          .from('attendance')
-          .upsert({
-            student_lrn: studentLrn,
-            subject: subject,
-            is_present: false,
-            date: selectedDate
-          });
+      const { error } = await supabase
+        .from('monitoring_log')
+        .upsert({
+          student_lrn: studentLrn,
+          subject: subject,
+          status: newValue ? 'present' : 'late',
+          date: selectedDate,
+          evaluation: 'pending'
+        });
 
-        if (error) {
-          console.error('Error updating attendance:', error);
-          // Revert the state if there's an error
-          setAttendance(prev => ({
-            ...prev,
-            [`${studentLrn}-${subject}`]: currentValue
-          }));
-        }
-      } else {
-        // If marking as present (✓), remove the record if it exists
-        const { error } = await supabase
-          .from('attendance')
-          .delete()
-          .match({ 
-            student_lrn: studentLrn, 
-            subject: subject,
-            date: selectedDate 
-          });
-
-        if (error) {
-          console.error('Error removing attendance record:', error);
-          setAttendance(prev => ({
-            ...prev,
-            [`${studentLrn}-${subject}`]: currentValue
-          }));
-        }
+      if (error) {
+        console.error('Error updating attendance:', error);
+        setAttendance(prev => ({
+          ...prev,
+          [`${studentLrn}-${subject}`]: currentValue
+        }));
       }
     } catch (err) {
       console.error('Unexpected error:', err);
@@ -164,6 +135,12 @@ const Attendance = () => {
     <div className="attendance-container">
       <header className="attendance-header">
         <h1>Attendance Logs</h1>
+        <h2>{new Date().toLocaleDateString('en-US', { 
+          weekday: 'long',
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric'
+        })}</h2>
       </header>
       <div className="attendance-content">
         {attendanceRecords.length === 0 ? (
