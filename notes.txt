@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
 import { supabase } from '../lib/supabaseClient'; // Adjust according to your setup
 import '../styles/Attendance.css'; // Import the CSS file
 
@@ -7,8 +6,6 @@ const Attendance = () => {
   const [attendanceData, setAttendanceData] = useState([]);
   const [error, setError] = useState(null);
   const [selectedDate, setSelectedDate] = useState('');
-
-  const location = useLocation(); // Hook to access the location object, which contains query parameters
 
   const fetchAttendanceData = async () => {
     try {
@@ -19,14 +16,9 @@ const Attendance = () => {
           date,
           status,
           student_assign_id,
-          student_assign (
+          student_assign(
             student_assign_id,
             students!inner(last_name, first_name)
-          ),
-          teacher_assign_id,
-          teacher_assign (
-            teacher_assign_id,
-            teachers!inner(teacher)
           )
         `);
 
@@ -41,20 +33,22 @@ const Attendance = () => {
     }
   };
 
-  // Get the date from query params
-  useEffect(() => {
-    const queryParams = new URLSearchParams(location.search);
-    const date = queryParams.get('date');
-    if (date) {
-      setSelectedDate(date);
-    }
-    fetchAttendanceData();
-  }, [location.search]);
+  const handleDateChange = (event) => {
+    const selected = event.target.value;
+    setSelectedDate(selected);
 
-  // Filter the attendance data based on selected date
-  const filteredData = selectedDate
-    ? attendanceData.filter((entry) => entry.date === selectedDate)
-    : attendanceData;
+    const filteredData = attendanceData.filter(entry => entry.date === selected);
+    setAttendanceData(filteredData);
+  };
+
+  const displayAllData = () => {
+    setSelectedDate('');
+    fetchAttendanceData(); // Re-fetch all data
+  };
+
+  useEffect(() => {
+    fetchAttendanceData();
+  }, []); // Run once when the component mounts
 
   return (
     <div>
@@ -62,7 +56,16 @@ const Attendance = () => {
       {error && <p className="error-message">Error: {error}</p>}
 
       <div>
-        <h3>Attendance for {selectedDate ? selectedDate : 'All Dates'}</h3>
+        <label>Select Date: </label>
+        <input
+          type="date"
+          value={selectedDate}
+          onChange={handleDateChange}
+        />
+      </div>
+
+      <div>
+        <button onClick={displayAllData}>Display All</button>
       </div>
 
       <table>
@@ -75,8 +78,8 @@ const Attendance = () => {
           </tr>
         </thead>
         <tbody>
-          {filteredData.length > 0 ? (
-            filteredData.map((entry) => (
+          {attendanceData.length > 0 ? (
+            attendanceData.map((entry) => (
               <tr key={entry.attendance_id}>
                 <td>{entry.attendance_id}</td>
                 <td>
@@ -105,3 +108,7 @@ const Attendance = () => {
 };
 
 export default Attendance;
+
+
+
+
