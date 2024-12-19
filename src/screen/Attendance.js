@@ -1,175 +1,141 @@
-import React, { useEffect, useState } from 'react';
-import { useLocation } from 'react-router-dom';
-import { supabase } from '../lib/supabaseClient';
+import React, { useState, useEffect } from 'react';
+import { supabase } from '../lib/supabaseClient'; // Adjust according to your setup
 import '../styles/Attendance.css';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faCheck, faTimes } from '@fortawesome/free-solid-svg-icons';
 
 const Attendance = () => {
-  const [attendanceRecords, setAttendanceRecords] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [attendance, setAttendance] = useState({});
-  const location = useLocation();
-  
-  // Set the app element for accessibility
-  useEffect(() => {
-  }, []);
+  const [attendanceData, setAttendanceData] = useState([]);
+  const [error, setError] = useState(null);
 
-  // Get the date from the URL query parameters
-  const queryParams = new URLSearchParams(location.search);
-  const selectedDate = queryParams.get('date') || new Date().toISOString().split('T')[0]; // Default to today
-
-  useEffect(() => {
-    fetchAttendanceRecords(selectedDate);
-    const interval = setInterval(() => {
-      fetchAttendanceRecords(selectedDate);
-    }, 2000); // Refresh every 30 seconds
-
-    return () => clearInterval(interval); // Cleanup on unmount
-  }, [selectedDate]);
-
-  const fetchAttendanceRecords = async (date) => {
+  const fetchAttendanceData = async () => {
     try {
-      const startOfDay = new Date(date);
-      startOfDay.setUTCHours(0, 0, 0, 0); // Set to UTC
-      const endOfDay = new Date(date);
-      endOfDay.setUTCHours(23, 59, 59, 999); // Set to UTC
-
-      const { data: records, error } = await supabase
-        .from('monitoring_log')
+      const { data, error } = await supabase
+        .from('student_assign')
         .select(`
-          log_id,
-          student_lrn,
-          date,
-          status,
-          evaluation,
-          students (
-            first_name,
-            middle_name,
-            last_name
-          )
-        `)
-        .gte('date', startOfDay.toISOString())
-        .lte('date', endOfDay.toISOString());
+          student_assign_id,
+          students!inner(last_name, first_name),
+          attendance_log!left(status, date)
+        `);
 
       if (error) {
-        console.error('Error fetching attendance records:', error.message);
-        return;
+        throw error;
       }
 
-      setAttendanceRecords(records);
+      // Transform the data to match your SQL query
+      const formattedData = data.map(entry => {
+        const fullName = `${entry.students.last_name}, ${entry.students.first_name}`;
+        const attendanceStatus = entry.attendance_log?.status || 'present'; // Default to 'present'
+        const attendanceDate = entry.attendance_log?.date || 'N/A';
 
-      // Create an object to store attendance status
-      const attendanceStatus = {};
-      // First set all combinations to true (✓)
-      records.forEach(record => {
-        ['TVL', 'PE', 'HISTORY', 'MATH', 'AP', 'SCIENCE'].forEach(subject => {
-          attendanceStatus[`${record.student_lrn}-${subject}`] = record.status === 'present';
-        });
+        return {
+          student_assign_id: entry.student_assign_id,
+          full_name: fullName,
+          attendance_status: attendanceStatus,
+          attendance_date: attendanceDate,
+        };
       });
 
-      setAttendance(attendanceStatus);
+      setAttendanceData(formattedData);
     } catch (err) {
-      console.error('Unexpected error:', err);
-    } finally {
-      setLoading(false);
+      setError(err.message);
+      console.error('Error fetching data:', err.message);
     }
   };
 
-  const handleIconClick = async (studentLrn, subject) => {
+  const toggleAttendanceStatus = async (studentAssignId, currentStatus) => {
+    const newStatus = currentStatus === 'present' ? 'absent' : 'present';
+
     try {
-      const currentValue = attendance[`${studentLrn}-${subject}`] ?? true;
-      const newValue = !currentValue;
-      
-      setAttendance(prev => ({
-        ...prev,
-        [`${studentLrn}-${subject}`]: newValue
-      }));
+      // Check if attendance log exists for the student_assign_id
+      const { data, error: fetchError } = await supabase
+        .from('attendance_log')
+        .select('attendance_id, status')
+        .eq('student_assign_id', studentAssignId) // Match the student_assign_id
+        .single(); // Ensure only one row is returned
 
-      const { error } = await supabase
-        .from('monitoring_log')
-        .upsert({
-          student_lrn: studentLrn,
-          subject: subject,
-          status: newValue ? 'present' : 'late',
-          date: selectedDate,
-          evaluation: 'pending'
-        });
-
-      if (error) {
-        console.error('Error updating attendance:', error);
-        setAttendance(prev => ({
-          ...prev,
-          [`${studentLrn}-${subject}`]: currentValue
-        }));
+      if (fetchError) {
+        if (fetchError.code === 'PGRST001') {
+          // Handle no rows found scenario (insert new attendance log)
+          console.log('No attendance record found, inserting a new one');
+        } else {
+          throw fetchError;
+        }
       }
+
+      // If attendance log exists, update the status
+      if (data) {
+        const { error: updateError } = await supabase
+          .from('attendance_log')
+          .update({ status: newStatus })
+          .match({ attendance_id: data.attendance_id }); // Update using the attendance_id
+
+        if (updateError) {
+          throw updateError;
+        }
+      } else {
+        // If no attendance log exists, insert a new one
+        const { error: insertError } = await supabase
+          .from('attendance_log')
+          .insert([
+            { student_assign_id: studentAssignId, status: newStatus, date: new Date().toISOString() }
+          ]);
+
+        if (insertError) {
+          throw insertError;
+        }
+      }
+
+      // Update the local state to reflect the new status
+      setAttendanceData(prevData =>
+        prevData.map(entry =>
+          entry.student_assign_id === studentAssignId
+            ? { ...entry, attendance_status: newStatus }
+            : entry
+        )
+      );
     } catch (err) {
-      console.error('Unexpected error:', err);
+      console.error('Error updating attendance:', err.message);
     }
   };
 
-  const renderSubjectCell = (studentLrn, subject) => {
-    // Default to true (✓ icon) if no attendance record exists
-    const isPresent = attendance[`${studentLrn}-${subject}`] ?? true;
-    return (
-      <td 
-        className="check-cell" 
-        onClick={() => handleIconClick(studentLrn, subject)}
-        style={{ cursor: 'pointer' }}
-      >
-        <FontAwesomeIcon 
-          icon={isPresent ? faCheck : faTimes} 
-          className={`status-icon ${isPresent ? 'present' : 'absent'}`}
-        />
-      </td>
-    );
-  };
-
-  if (loading) {
-    return <p>Loading...</p>;
-  }
-
-  const subjects = ['TVL', 'PE', 'HISTORY', 'MATH', 'AP', 'SCIENCE'];
+  useEffect(() => {
+    fetchAttendanceData();
+  }, []);
 
   return (
-    <div className="attendance-container">
-      <header className="attendance-header">
-        <h1>Attendance Logs</h1>
-        <h2>{new Date().toLocaleDateString('en-US', { 
-          weekday: 'long',
-          year: 'numeric',
-          month: 'long',
-          day: 'numeric'
-        })}</h2>
-      </header>
-      <div className="attendance-content">
-        {attendanceRecords.length === 0 ? (
-          <p>No attendance records found for this date.</p>
-        ) : (
-          <div className="table-container">
-            <table>
-              <thead>
-                <tr>
-                  <th>STUDENT NAME</th>
-                  {subjects.map(subject => (
-                    <th key={subject}>{subject}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {attendanceRecords.map((record) => (
-                  <tr key={record.student_lrn}>
-                    <td>
-                      {`${record.students.first_name} ${record.students.middle_name || ''} ${record.students.last_name}`}
-                    </td>
-                    {subjects.map(subject => renderSubjectCell(record.student_lrn, subject))}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
+    <div>
+      <h1>Attendance Data</h1>
+      {error && <p className="error-message">Error: {error}</p>}
+      <table>
+        <thead>
+          <tr>
+            <th>Student Assign ID</th>
+            <th>Full Name</th>
+            <th>Attendance Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          {attendanceData.length > 0 ? (
+            attendanceData.map((entry) => (
+              <tr key={entry.student_assign_id}>
+                <td>{entry.student_assign_id}</td>
+                <td>{entry.full_name}</td>
+                <td>
+                  <div
+                    className={`attendance-status ${entry.attendance_status === 'present' ? 'present' : 'absent'}`}
+                    onClick={() => toggleAttendanceStatus(entry.student_assign_id, entry.attendance_status)}
+                  >
+                    {entry.attendance_status === 'present' ? '✔' : '✘'}
+                  </div>
+                </td>
+              </tr>
+            ))
+          ) : (
+            <tr>
+              <td colSpan="4">No attendance data found.</td>
+            </tr>
+          )}
+        </tbody>
+      </table>
     </div>
   );
 };

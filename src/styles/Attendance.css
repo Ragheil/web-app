@@ -1,138 +1,104 @@
-/* src/styles/Attendance.css */
+/* Attendance.css */
+body {
+  font-family: Arial, sans-serif;
+  background-color: #f9f9f9;
+  margin: 0;
+  padding: 0;
+}
 
-.attendance-container {
-    display: flex;
-    flex-direction: column;
-    align-items: center; /* Center horizontally */
-    padding: 20px; /* Add some padding around the content */
-  }
-  
-  .attendance-header {
-    margin-bottom: 10px; /* Reduced space below the header */
-  }
-  
-  .attendance-content {
-    text-align: center; /* Center text inside content */
-  }
-  
-  .table-container {
-    display: flex;
-    justify-content: center; /* Center the table */
-    width: 100%; /* Make it take full width */
-    overflow-x: auto;
-    margin: 20px 0;
-  }
-  
-  table {
-    border-collapse: collapse;
-    width: 100%;
-    background-color: white;
-  }
-  
-  th, td {
-    border: 1px solid #000;
-    padding: 8px;
-    text-align: left;
-    font-size: 14px;
-  }
-  
-  th {
-    background-color: white;
-    font-weight: normal;
-    text-align: center;
-  }
-  
-  td {
-    min-width: 80px;
-  }
+h1 {
+  text-align: center;
+  color: #333;
+  margin-top: 20px;
+}
 
-  .check-cell {
-    text-align: center;
-    transition: background-color 0.2s;
-  }
+table {
+  width: 90%;
+  margin: 20px auto;
+  border-collapse: collapse;
+  background-color: #fff;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
 
-  .check-cell:hover {
-    background-color: #f0f0f0;
-  }
+table thead th {
+  background-color: #4CAF50;
+  color: white;
+  padding: 10px;
+  text-align: left;
+  border: 1px solid #ddd;
+}
 
-  .status-icon {
-    font-size: 14px;
-    transition: transform 0.2s;
-  }
+table tbody td {
+  padding: 10px;
+  border: 1px solid #ddd;
+  text-align: left;
+}
 
-  .status-icon.present {
-    color: #28a745;
-  }
+table tbody tr:nth-child(even) {
+  background-color: #f2f2f2;
+}
 
-  .status-icon.absent {
-    color: #dc3545;
-  }
+table tbody tr:hover {
+  background-color: #f1f1f1;
+}
 
-  .status-icon:hover {
-    transform: scale(1.2);
-  }
+p {
+  text-align: center;
+  color: red;
+  font-weight: bold;
+}
 
-  .check-icon {
-    color: #000;
-    font-size: 14px;
-  }
-  
-  tr:hover {
-    background-color: #f5f5f5;
-  }
-  
-  /* Burger menu styles */
-  .burger-menu {
-    display: flex;
-    flex-direction: column;
-    cursor: pointer;
-    gap: 4px;
-    margin-left: auto;
-  }
-  
-  .burger-line {
-    width: 25px;
-    height: 3px;
-    background-color: black;
-    transition: transform 0.3s ease;
-  }
-  
-  /* Sidebar menu styles */
-  .sidebar {
-    position: fixed;
-    top: 0;
-    left: -250px; /* Initially hidden off-screen */
-    width: 250px;
-    height: 100%;
-    background-color: #333;
-    color: #fff;
-    display: flex;
-    flex-direction: column;
-    padding: 20px;
-    transition: left 0.3s ease;
-  }
-  
-  .sidebar.open {
-    left: 0; /* Slide in when open */
-  }
-  
-  .sidebar nav a {
-    color: white;
-    padding: 10px 0;
-    text-decoration: none;
-    transition: color 0.3s;
-  }
-  
-  .sidebar nav a:hover {
-    color: #ccc;
-  }
-  
-  /* Add some space to the right of the main content to make room for the sidebar */
-  .attendance-container {
-    padding-left: 20px;
-    transition: padding-left 0.3s;
-  }
-  
-  .sidebar.open ~ .attendance-container {
-    padding-left: 270px; /* Shift content when sidebar is open */
-  }
+td {
+  text-align: center;
+}
+
+td[colspan="4"] {
+  text-align: center;
+  color: #555;
+}
+
+.error-message {
+  text-align: center;
+  color: #e74c3c;
+  font-weight: bold;
+  margin-top: 10px;
+}
+
+.check {
+  color: green;
+  cursor: pointer;
+}
+
+.x {
+  color: red;
+  cursor: pointer;
+}
+.attendance-status {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 50px;
+  height: 50px;
+  font-size: 2rem; /* Larger icon */
+  background-color: #f0f0f0;
+  border: 2px solid #ccc;
+  border-radius: 15%;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  margin: 0 auto; /* Centers the button horizontally */
+}
+
+.attendance-status.present {
+  background-color: #4caf50; /* Green for present */
+  color: white;
+}
+
+.attendance-status.absent {
+  background-color: #f44336; /* Red for absent */
+  color: white;
+}
+
+.attendance-status:hover {
+  background-color: #ddd; /* Slight hover effect */
+}
+
