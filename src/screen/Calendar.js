@@ -35,7 +35,7 @@ const CalendarPage = () => {
   // Function to handle date selection changes in the calendar
   const handleDateChange = (selectedDate) => {
     setDate(selectedDate);
-    const formattedDate = selectedDate.toISOString().split('T')[0]; // Format date for comparison
+    const formattedDate = selectedDate.toLocaleDateString('en-CA'); // Format as YYYY-MM-DD
     navigate(`/attendance?date=${formattedDate}`); // Navigate to Attendance page with selected date
   };
 

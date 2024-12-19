@@ -73,6 +73,7 @@ td[colspan="4"] {
   color: red;
   cursor: pointer;
 }
+
 .attendance-status {
   display: flex;
   align-items: center;
@@ -101,4 +102,3 @@ td[colspan="4"] {
 .attendance-status:hover {
   background-color: #ddd; /* Slight hover effect */
 }
-
