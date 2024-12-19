@@ -1,0 +1,114 @@
+import React, { useState, useEffect } from 'react';
+import { supabase } from '../lib/supabaseClient'; // Adjust according to your setup
+import '../styles/Attendance.css'; // Import the CSS file
+
+const Attendance = () => {
+  const [attendanceData, setAttendanceData] = useState([]);
+  const [error, setError] = useState(null);
+  const [selectedDate, setSelectedDate] = useState('');
+
+  const fetchAttendanceData = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('attendance_log')
+        .select(`
+          attendance_id,
+          date,
+          status,
+          student_assign_id,
+          student_assign(
+            student_assign_id,
+            students!inner(last_name, first_name)
+          )
+        `);
+
+      if (error) {
+        throw error;
+      }
+
+      setAttendanceData(data);
+    } catch (err) {
+      setError(err.message);
+      console.error('Error fetching data:', err.message);
+    }
+  };
+
+  const handleDateChange = (event) => {
+    const selected = event.target.value;
+    setSelectedDate(selected);
+
+    const filteredData = attendanceData.filter(entry => entry.date === selected);
+    setAttendanceData(filteredData);
+  };
+
+  const displayAllData = () => {
+    setSelectedDate('');
+    fetchAttendanceData(); // Re-fetch all data
+  };
+
+  useEffect(() => {
+    fetchAttendanceData();
+  }, []); // Run once when the component mounts
+
+  return (
+    <div>
+      <h1>Attendance Data</h1>
+      {error && <p className="error-message">Error: {error}</p>}
+
+      <div>
+        <label>Select Date: </label>
+        <input
+          type="date"
+          value={selectedDate}
+          onChange={handleDateChange}
+        />
+      </div>
+
+      <div>
+        <button onClick={displayAllData}>Display All</button>
+      </div>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Attendance ID</th>
+            <th>Full Name</th>
+            <th>Attendance Status</th>
+            <th>Attendance Date</th>
+          </tr>
+        </thead>
+        <tbody>
+          {attendanceData.length > 0 ? (
+            attendanceData.map((entry) => (
+              <tr key={entry.attendance_id}>
+                <td>{entry.attendance_id}</td>
+                <td>
+                  {entry.student_assign?.students?.last_name},{' '}
+                  {entry.student_assign?.students?.first_name}
+                </td>
+                <td>
+                  <div
+                    className={`attendance-status ${entry.status === 'present' ? 'present' : 'absent'}`}
+                  >
+                    {entry.status === 'present' ? '✔' : '✘'}
+                  </div>
+                </td>
+                <td>{entry.date || 'N/A'}</td>
+              </tr>
+            ))
+          ) : (
+            <tr>
+              <td colSpan="4">No attendance data found.</td>
+            </tr>
+          )}
+        </tbody>
+      </table>
+    </div>
+  );
+};
+
+export default Attendance;
+
+
+
+

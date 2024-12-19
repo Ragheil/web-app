@@ -9,16 +9,15 @@ const TeacherProfile = () => {
   useEffect(() => {
     const fetchTeacherProfile = async () => {
       try {
+        // Get current user
         const { data: { user }, error: authError } = await supabase.auth.getUser();
         if (authError) throw authError;
 
         if (user) {
+          // Fetch teacher data from teachers table
           const { data: teacher, error: teacherError } = await supabase
             .from('teachers')
-            .select(`
-              *,
-              subjects (subject_name)
-            `)
+            .select('*')
             .eq('email', user.email)
             .single();
 
@@ -28,6 +27,7 @@ const TeacherProfile = () => {
           }
 
           setTeacherData(teacher);
+          console.log('Teacher data:', teacher); // Debug log
         }
       } catch (error) {
         console.error('Error:', error);
@@ -54,7 +54,7 @@ const TeacherProfile = () => {
 
   if (!teacherData) {
     return (
-      <div>
+      <div className="error-container">
         <p>No teacher profile data found. Please ensure your profile exists.</p>
         <p>Check the browser console for more details.</p>
       </div>
@@ -64,10 +64,11 @@ const TeacherProfile = () => {
   return (
     <div className="teacher-profile-container">
       <div className="teacher-profile-header">
-        <h2>{teacherData.teacher || 'Teacher Name Not Found'}</h2>
+        <h1>Teacher Profile</h1>
         <div className="teacher-profile-details">
-          <p><span>📧</span> {teacherData.email}</p>
-          <p><span>📚</span> Subject: {teacherData.subjects?.subject_name || 'No subject assigned'}</p>
+          <p><strong>Name:</strong> {teacherData.teacher}</p>
+          <p><strong>Email:</strong> {teacherData.email}</p>
+          <p><strong>Username:</strong> {teacherData.username}</p>
         </div>
         <button 
           className="sign-out-button" 
