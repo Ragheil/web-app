@@ -10,6 +10,7 @@ const Attendance = () => {
 
   const location = useLocation(); // Hook to access the location object, which contains query parameters
 
+  // Fetch attendance data from Supabase
   const fetchAttendanceData = async () => {
     try {
       const { data, error } = await supabase
@@ -56,6 +57,34 @@ const Attendance = () => {
     ? attendanceData.filter((entry) => entry.date === selectedDate)
     : attendanceData;
 
+  // Sort the data by attendance_id in ascending order
+  const sortedData = filteredData.sort((a, b) => a.attendance_id - b.attendance_id);
+
+  // Function to toggle attendance status
+  const toggleAttendanceStatus = async (attendanceId, currentStatus) => {
+    const newStatus = currentStatus === 'present' ? 'absent' : 'present';
+
+    try {
+      const { error } = await supabase
+        .from('attendance_log')
+        .update({ status: newStatus })
+        .eq('attendance_id', attendanceId);
+
+      if (error) {
+        throw error;
+      }
+
+      // Log the action and the new status
+      console.log(`Attendance ID ${attendanceId} marked as ${newStatus}`);
+
+      // Re-fetch the data to update the UI
+      fetchAttendanceData();
+    } catch (err) {
+      setError('Error updating attendance status');
+      console.error('Error updating status:', err);
+    }
+  };
+
   return (
     <div>
       <h1>Attendance Data</h1>
@@ -75,17 +104,22 @@ const Attendance = () => {
           </tr>
         </thead>
         <tbody>
-          {filteredData.length > 0 ? (
-            filteredData.map((entry) => (
+          {sortedData.length > 0 ? (
+            sortedData.map((entry) => (
               <tr key={entry.attendance_id}>
                 <td>{entry.attendance_id}</td>
                 <td>
-                  {entry.student_assign?.students?.last_name},{' '}
+                  {entry.student_assign?.students?.last_name}, {' '}
                   {entry.student_assign?.students?.first_name}
                 </td>
                 <td>
                   <div
-                    className={`attendance-status ${entry.status === 'present' ? 'present' : 'absent'}`}
+                    className={`attendance-status ${
+                      entry.status === 'present' ? 'present' : 'absent'
+                    }`}
+                    onClick={() =>
+                      toggleAttendanceStatus(entry.attendance_id, entry.status)
+                    }
                   >
                     {entry.status === 'present' ? '✔' : '✘'}
                   </div>
